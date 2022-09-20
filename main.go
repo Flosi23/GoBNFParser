@@ -31,7 +31,7 @@ func optionParseString(option []Def, ruleTree ParseTreeNode, input string) (Pars
 				varErr = err
 
 				if err == nil {
-					currentString = currentString[pos:]
+					currentString = currentString[pos+1:]
 					ruleTree.children = append(ruleTree.children, tree)
 					break
 				}
@@ -46,7 +46,7 @@ func optionParseString(option []Def, ruleTree ParseTreeNode, input string) (Pars
 			}
 
 			if currentString[0:len(def.symbol)] == def.symbol {
-				currentString = currentString[0:len(def.symbol)]
+				currentString = currentString[len(def.symbol):]
 				ruleTree.children = append(ruleTree.children, ParseTreeNode{
 					value: def.symbol,
 				})
