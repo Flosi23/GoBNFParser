@@ -182,3 +182,123 @@ func TestParseString_VarStringVar(t *testing.T) {
 		throwInvalidGrammarNoErrorError("rule.ParseString(23-45)", t)
 	}
 }
+
+func TestParseString_VarVar(t *testing.T) {
+	firstnameRule := Rule{
+		name: "First name",
+		options: [][]Def{
+			{{symbol: "Simon"}},
+		},
+	}
+	surnameRule := Rule{
+		name: "Surname",
+		options: [][]Def{
+			{{symbol: "Weckler"}},
+		},
+	}
+	fullnameRule := Rule{
+		name: "Full name",
+		options: [][]Def{
+			{{rule: firstnameRule, isVariable: true}, {rule: surnameRule, isVariable: true}},
+		},
+	}
+
+	want := ParseTreeNode{
+		ruleName: "Full name",
+		children: []ParseTreeNode{
+			{
+				ruleName: "First name",
+				children: []ParseTreeNode{
+					{value: "Simon"},
+				},
+			},
+			{
+				ruleName: "Surname",
+				children: []ParseTreeNode{
+					{value: "Weckler"},
+				},
+			},
+		},
+	}
+
+	result, _ := fullnameRule.ParseString("SimonWeckler")
+	if !want.equals(result) {
+		throwWantedXGotYError("rule.ParseString('SimonWeckler')", want, result, t)
+	}
+
+	_, err := fullnameRule.ParseString("JakobWeckler")
+	if err == nil {
+		throwInvalidGrammarNoErrorError("rule.ParseString('JakobWeckler')", t)
+	}
+
+	_, err = fullnameRule.ParseString("SimonScholz")
+	if err == nil {
+		throwInvalidGrammarNoErrorError("rule.ParseString('SimonScholz')", t)
+	}
+
+	_, err = fullnameRule.ParseString("JakobScholz")
+	if err == nil {
+		throwInvalidGrammarNoErrorError("rule.ParseString('JakobScholz')", t)
+	}
+}
+
+func TestParseString_Recursion(t *testing.T) {
+	zeroOrOneRule := Rule{
+		name: "ZeroOrOne",
+		options: [][]Def{
+			{{symbol: "0"}},
+			{{symbol: "1"}},
+		},
+	}
+	machineLanguageRule := Rule{
+		name: "Machine Language",
+		options: [][]Def{
+			{{isVariable: true, rule: zeroOrOneRule}},
+			{{isVariable: true, rule: zeroOrOneRule}, {isVariable: true, isSelf: true}},
+		},
+	}
+
+	want := ParseTreeNode{
+		ruleName: "Machine Language",
+		children: []ParseTreeNode{
+			{
+				ruleName: "ZeroOrOne",
+				children: []ParseTreeNode{
+					{value: "1"},
+				},
+			},
+			{
+				ruleName: "Machine Language",
+				children: []ParseTreeNode{
+					{
+						ruleName: "ZeroOrOne",
+						children: []ParseTreeNode{
+							{value: "1"},
+						},
+					},
+					{
+						ruleName: "Machine Language",
+						children: []ParseTreeNode{
+							{
+								ruleName: "ZeroOrOne",
+								children: []ParseTreeNode{
+									{value: "0"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	result, _ := machineLanguageRule.ParseString("110")
+	if !result.equals(want) {
+		throwWantedXGotYError("rule.ParseString('110')", want, result, t)
+	}
+
+	_, err := machineLanguageRule.ParseString("12")
+	if err == nil {
+		throwInvalidGrammarNoErrorError("rule.ParseString('12')", t)
+	}
+}

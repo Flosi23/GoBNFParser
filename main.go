@@ -9,6 +9,7 @@ type Rule struct {
 
 type Def struct {
 	isVariable bool
+	isSelf     bool
 	rule       Rule
 	symbol     string
 }
@@ -19,15 +20,20 @@ type ParseTreeNode struct {
 	children []ParseTreeNode
 }
 
-func optionParseString(option []Def, ruleTree ParseTreeNode, input string) (ParseTreeNode, error) {
+func optionParseString(parentRule Rule, option []Def, ruleTree ParseTreeNode, input string) (ParseTreeNode, error) {
 	currentString := input
 
 	for _, def := range option {
 		if def.isVariable {
 			var varErr error
 
+			rule := def.rule
+			if def.isSelf {
+				rule = parentRule
+			}
+
 			for pos, _ := range currentString {
-				tree, err := def.rule.ParseString(currentString[0 : pos+1])
+				tree, err := rule.ParseString(currentString[0 : pos+1])
 				varErr = err
 
 				if err == nil {
@@ -56,6 +62,10 @@ func optionParseString(option []Def, ruleTree ParseTreeNode, input string) (Pars
 		}
 	}
 
+	if len(currentString) > 0 {
+		return ParseTreeNode{}, errors.New("no_match")
+	}
+
 	return ruleTree, nil
 }
 
@@ -65,7 +75,7 @@ func (rule Rule) ParseString(input string) (ParseTreeNode, error) {
 			ruleName: rule.name,
 		}
 
-		tree, err := optionParseString(option, tree, input)
+		tree, err := optionParseString(rule, option, tree, input)
 
 		if err == nil {
 			return tree, nil
