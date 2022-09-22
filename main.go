@@ -23,7 +23,7 @@ type ParseTreeNode struct {
 func optionParseString(parentRule Rule, option []Def, ruleTree ParseTreeNode, input string) (ParseTreeNode, error) {
 	currentString := input
 
-	for _, def := range option {
+	for optionNum, def := range option {
 		if def.isVariable {
 			var varErr error
 
@@ -36,7 +36,7 @@ func optionParseString(parentRule Rule, option []Def, ruleTree ParseTreeNode, in
 				tree, err := rule.ParseString(currentString[0 : pos+1])
 				varErr = err
 
-				if err == nil {
+				if err == nil && !(len(currentString[pos+1:]) > 0 && optionNum+1 == len(option)) {
 					currentString = currentString[pos+1:]
 					ruleTree.children = append(ruleTree.children, tree)
 					break
