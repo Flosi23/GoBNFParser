@@ -32,7 +32,7 @@ func optionParseString(parentRule Rule, option []Def, ruleTree ParseTreeNode, in
 				rule = parentRule
 			}
 
-			for pos, _ := range currentString {
+			for pos := range currentString {
 				tree, err := rule.ParseString(currentString[0 : pos+1])
 				varErr = err
 
@@ -91,7 +91,7 @@ func (treeOne ParseTreeNode) equals(treeTwo ParseTreeNode) bool {
 	areChildrenEqual := true
 
 	if len(treeOne.children) == len(treeTwo.children) {
-		for i, _ := range treeOne.children {
+		for i := range treeOne.children {
 			if !treeOne.children[i].equals(treeOne.children[i]) {
 				areChildrenEqual = false
 				break
